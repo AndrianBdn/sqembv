@@ -1,54 +1,30 @@
-# sqlite-gobroem
+# sqembv
 
-`sqlite-gobroem` is a Golang embedded web-based SQLite database browser.
+`sqembv` is a Golang embedded web-based SQLite database browser. 
+It is a fork of [sqlite-gobroem](https://github.com/bakaoh/sqlite-gobroem) which is a little bit modernized and improved.
 
-## Installing
+Warning: avoid exposing this tool to the public Internet. 
+It does not provide any authentication or authorization and 
+can be used to read and modify your database.
+
+## Embedded Use 
 
 Use go get to install the latest version of the library:
 
 ```bash
-$ go get -u github.com/bakaoh/sqlite-gobroem
+$ go get -u github.com/andrianbdn/sqembv
 ```
 
-Include Gobroem in your application:
+Include sqembv in your application:
 
 ```go
-import "github.com/bakaoh/sqlite-gobroem/gobroem"
+import "github.com/andrianbdn/sqembv"
 ```
-
-## Standalone
-
-Use go build to build Gobroem:
-
-```bash
-$ cd $GOPATH/src/github.com/bakaoh/sqlite-gobroem/gobroem
-$ go build .
-```
-
-Run Gobroem:
-
-```bash
-$ ./sqlite-gobroem -h
-
-Usage of ./sqlite-gobroem:
-  -bind string
-    	HTTP server host (default "localhost")
-  -db string
-    	SQLite database file (default "test/test.db")
-  -listen uint
-    	HTTP server listen port (default 8000)
-
-$ ./sqlite-gobroem
-```
-
-Open browser http://localhost:8000/
-
-## Embedded
 
 Initialize the API controller:
 
 ```go
-api, err := gobroem.NewAPI("path to sqlite db file")
+api, err := sqembv.NewAPI("path to sqlite db file")
 if err != nil {
     log.Fatal("can not open db", err)
 }
@@ -57,5 +33,38 @@ if err != nil {
 Register the API handler:
 
 ```go
-http.Handle("/browser/", api.Handler("/browser/"))
+http.Handle("/browser/", sqembv.Handler("/browser/"))
 ```
+
+
+
+## Standalone
+
+Use go install to install the latest version of the program:
+
+```bash
+$ go install github.com/andrianbdn/sqembv/cmd/sqembv@latest
+```
+
+Run sqembv:
+
+```bash
+$ ./sqembv -h
+
+sqembv, v0.1.1
+Usage of ./sqembv:
+  -bind string
+        HTTP server host (default "localhost")
+  -db string
+        SQLite database file (default "test.sqlite3")
+  -license
+        Print program license and exit
+  -listen uint
+        HTTP server listen port (default 8000)
+
+
+$ ./sqembv
+```
+
+Open browser http://localhost:8000/
+

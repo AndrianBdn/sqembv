@@ -1,7 +1,8 @@
-package gobroem
+package sqembv
 
 import (
 	"database/sql"
+	"embed"
 	"encoding/json"
 	"errors"
 	"html/template"
@@ -10,6 +11,12 @@ import (
 	"path/filepath"
 	"strings"
 )
+
+//go:embed LICENSE
+var license string
+
+//go:embed static
+var embStatic embed.FS
 
 // API ...
 type API struct {
@@ -35,13 +42,24 @@ func NewAPIFromDB(db *sql.DB) (*API, error) {
 	return &API{client, ""}, nil
 }
 
-// Handler ...
-func (a *API) Handler(browserRoot string, staticRoot string) http.Handler {
-	indexPage, _ := Asset("static/index.html")
-	indexTmpl, _ := template.New("name").Parse(string(indexPage))
+func License() string {
+	return license
+}
 
-	fileServer := http.FileServer(&AssetFS{AssetDir, Asset, "static"})
-	staticHandler := http.StripPrefix(staticRoot, fileServer)
+// Handler ...
+func (a *API) Handler(browserRoot string) http.Handler {
+	if !strings.HasSuffix(browserRoot, "/") {
+		browserRoot += "/"
+	}
+
+	indexPage, err := embStatic.ReadFile("static/index.html")
+	if err != nil {
+		panic("can not read index.html: " + err.Error())
+	}
+	indexTmpl, _ := template.New("name").Parse(string(indexPage))
+	staticHandler := http.FileServer(http.FS(embStatic))
+
+	staticRoot := browserRoot + "static/"
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
@@ -62,12 +80,7 @@ func (a *API) Handler(browserRoot string, staticRoot string) http.Handler {
 		case browserRoot:
 			indexTmpl.Execute(w, map[string]string{"root": browserRoot, "static": staticRoot})
 		default:
-			fileName := strings.Replace(r.URL.Path, staticRoot, "static/", 1)
-			if _, err := Asset(fileName); err == nil {
-				staticHandler.ServeHTTP(w, r)
-			} else {
-				http.NotFound(w, r)
-			}
+			staticHandler.ServeHTTP(w, r)
 		}
 	})
 }

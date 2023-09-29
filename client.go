@@ -1,4 +1,4 @@
-package gobroem
+package sqembv
 
 import (
 	"bytes"
@@ -22,7 +22,7 @@ const (
 
 // sqlClient is a wrapper around sql.DB
 type sqlClient struct {
-	*sql.DB
+	db *sql.DB
 }
 
 type sqlRow []interface{}
@@ -76,7 +76,7 @@ func (client *sqlClient) QuerySQL(query string) (*sqlResult, error) {
 }
 
 func (client *sqlClient) query(query string, args ...interface{}) (*sqlResult, error) {
-	rows, err := client.Query(query, args...)
+	rows, err := client.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
