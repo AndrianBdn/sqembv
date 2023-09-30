@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"html/template"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -22,6 +23,7 @@ var embStatic embed.FS
 type API struct {
 	dbClient *sqlClient
 	dbFile   string
+	Debug    bool
 }
 
 // NewAPI initializes the API controller with a DB file.
@@ -34,7 +36,7 @@ func NewAPI(dbFile string) (*API, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &API{client, dbFile}, nil
+	return &API{client, dbFile, false}, nil
 }
 
 func fileExists(dbFile string) bool {
@@ -51,7 +53,7 @@ func NewAPIFromDB(db *sql.DB) (*API, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &API{client, ""}, nil
+	return &API{client, "", false}, nil
 }
 
 func License() string {
@@ -69,10 +71,7 @@ func (a *API) Handler(browserRoot string) http.Handler {
 		panic("can not read index.html: " + err.Error())
 	}
 	indexTmpl, _ := template.New("name").Parse(string(indexPage))
-
 	staticHandler := http.StripPrefix(browserRoot, http.FileServer(http.FS(embStatic)))
-
-	staticRoot := browserRoot + "static/"
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
@@ -91,8 +90,19 @@ func (a *API) Handler(browserRoot string) http.Handler {
 		case browserRoot + "api/query":
 			a.Query(w, r)
 		case browserRoot:
-			indexTmpl.Execute(w, map[string]string{"root": browserRoot, "static": staticRoot})
+			err := indexTmpl.Execute(w, map[string]string{
+				"root":   browserRoot,
+				"static": browserRoot + "static/",
+			})
+			if err != nil {
+				log.Println("Error executing indexTmpl template:", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 		default:
+			if a.Debug {
+				log.Println("Serving static file:", r.URL.Path)
+			}
 			staticHandler.ServeHTTP(w, r)
 		}
 	})
