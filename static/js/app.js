@@ -257,7 +257,7 @@ exportCSV = function(query) {
   var host, url, win;
   query = window.encodeURI(query.replace(/\n/g, ' '));
   host = window.location.host;
-  url = 'http://' + host + '/api/query?format=csv&query=' + query;
+  url = 'http://' + host + apiRoot + '/api/query?format=csv&query=' + query;
   return win = window.open(url, '_blank');
 };
 
@@ -265,7 +265,7 @@ exportJSON = function(query) {
   var host, url, win;
   query = window.encodeURI(query.replace(/\n/g, ' '));
   host = window.location.host;
-  url = 'http://' + host + '/api/query?format=json&query=' + query;
+  url = 'http://' + host + apiRoot + '/api/query?format=json&query=' + query;
   return win = window.open(url, '_blank');
 };
 
@@ -385,6 +385,14 @@ $(function() {
       return;
     }
     return exportCSV(query);
+  });
+  $('#export_json').on('click', function() {
+    var query;
+    query = $.trim(editor.getValue());
+    if (query.length === 0) {
+      return;
+    }
+    return exportJSON(query);
   });
   $('.btn-file :file').on('fileselect', function(event, numFiles, label) {
     return console.log(label);

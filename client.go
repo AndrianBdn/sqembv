@@ -5,10 +5,8 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"github.com/uptrace/bun/driver/sqliteshim"
 	"reflect"
-
-	// include sqlite
-	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
@@ -33,7 +31,7 @@ type sqlResult struct {
 }
 
 func newClient(file string) (*sqlClient, error) {
-	db, err := sql.Open("sqlite3", file)
+	db, err := sql.Open(sqliteshim.ShimName, file)
 	if err != nil {
 		return nil, err
 	}

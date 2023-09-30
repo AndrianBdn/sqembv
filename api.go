@@ -26,11 +26,23 @@ type API struct {
 
 // NewAPI initializes the API controller with a DB file.
 func NewAPI(dbFile string) (*API, error) {
+	if !fileExists(dbFile) {
+		return nil, errors.New("db file does not exist")
+	}
+
 	client, err := newClient(dbFile)
 	if err != nil {
 		return nil, err
 	}
 	return &API{client, dbFile}, nil
+}
+
+func fileExists(dbFile string) bool {
+	info, err := os.Stat(dbFile)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }
 
 // NewAPIFromDB initializes the API controller with a DB.
@@ -57,7 +69,8 @@ func (a *API) Handler(browserRoot string) http.Handler {
 		panic("can not read index.html: " + err.Error())
 	}
 	indexTmpl, _ := template.New("name").Parse(string(indexPage))
-	staticHandler := http.FileServer(http.FS(embStatic))
+
+	staticHandler := http.StripPrefix(browserRoot, http.FileServer(http.FS(embStatic)))
 
 	staticRoot := browserRoot + "static/"
 

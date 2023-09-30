@@ -73,10 +73,9 @@ func startServer() {
 	_, _ = fmt.Fprintf(os.Stderr, "serving view for %s at http://%s:%d/\n",
 		options.db, options.host, options.port)
 
-	err = http.ListenAndServe(
-		fmt.Sprintf("%s:%d", options.host, options.port),
-		api.Handler("/"),
-	)
+	http.Handle("/", api.Handler("/"))
+
+	err = http.ListenAndServe(fmt.Sprintf("%s:%d", options.host, options.port), nil)
 
 	_, _ = fmt.Fprintf(os.Stderr, "error: %s\n", err)
 }
