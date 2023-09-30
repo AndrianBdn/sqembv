@@ -23,7 +23,6 @@ var embStatic embed.FS
 type API struct {
 	dbClient *sqlClient
 	dbFile   string
-	Debug    bool
 }
 
 // NewAPI initializes the API controller with a DB file.
@@ -36,7 +35,7 @@ func NewAPI(dbFile string) (*API, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &API{client, dbFile, false}, nil
+	return &API{client, dbFile}, nil
 }
 
 func fileExists(dbFile string) bool {
@@ -53,7 +52,7 @@ func NewAPIFromDB(db *sql.DB) (*API, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &API{client, "", false}, nil
+	return &API{client, ""}, nil
 }
 
 func License() string {
@@ -100,9 +99,6 @@ func (a *API) Handler(browserRoot string) http.Handler {
 				return
 			}
 		default:
-			if a.Debug {
-				log.Println("Serving static file:", r.URL.Path)
-			}
 			staticHandler.ServeHTTP(w, r)
 		}
 	})
